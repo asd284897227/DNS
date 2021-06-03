@@ -6,7 +6,7 @@
 #define DNS_DNSNODE_H
 #include "../allLibs/allLibs.h"
 /**
- * DNSè®°å½•å…ƒç´ 
+ * DNS¼ÇÂ¼ÔªËØ
  */
 class DNSNode {
 public:

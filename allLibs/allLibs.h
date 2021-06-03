@@ -7,7 +7,10 @@
 
 #define TYPE_IPV4 4
 #define TYPE_IPV6 6
-
+#define EXTERN_DNS_SERVER_IP "114.114.114.114"
+#define THREAD_COUNT 100
+#define BUFFER_SIZE 1024
+#define MAX_QUESTION_ACCOUNT 20
 
 #pragma comment(lib, "ws2_32.lib")
 

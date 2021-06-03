@@ -25,13 +25,13 @@ public:
      */
     static void warning(string warn) {
         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY);
-        printf("warn£º%s     ¡¾Error Code£º%d¡¿\n", warn.data(), GetLastError());
+        printf("warn£º%s\n", warn.data());
         setDefaultFontColor();
     }
 
     static void log(string log){
         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN);
-        printf("warn£º%s     ¡¾Error Code£º%d¡¿\n", log.data(), GetLastError());
+        printf("log£º%s\n", log.data());
         setDefaultFontColor();
     }
 

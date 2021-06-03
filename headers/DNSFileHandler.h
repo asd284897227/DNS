@@ -80,7 +80,7 @@ private:
      * @return 
      */
     DNSNode &getDnsNodeByUrl(string url) {
-        if (dnsMap.contains(url)) {
+        if (dnsMap.find(url) != dnsMap.end()) {
             return dnsMap[url];
         } else {
             DNSNode &node = dnsMap[url];

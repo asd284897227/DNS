@@ -49,11 +49,11 @@ public:
     /**
      * 删除末尾的元素
      */
-    DNSNode &removeLastNode() {
+    DNSNode removeLastNode() {
         //互斥量加锁
         WaitForSingleObject(hMutex, INFINITE);
         // 业务
-        DNSNode &node = caches.back();
+        DNSNode node = caches.back();
         caches.pop_back();
         //释放互斥量
         ReleaseMutex(hMutex);
@@ -83,17 +83,24 @@ public:
     }
 
 
-    bool removeNodeFromCache(DNSNode &node) {
+    /**
+     * 删除节点
+     * @param node
+     * @return
+     */
+    bool removeNode(DNSNode &node) {
         //互斥量加锁
         WaitForSingleObject(hMutex, INFINITE);
         list<DNSNode>::iterator ite;
         for (ite = caches.begin(); ite != caches.end(); ++ite) {
             if (ite->getUrl() == node.getUrl()) {
                 caches.erase(ite);
+                return true;
             }
         }
         //释放互斥量
         DNSNode newNode = DNSNode();
+        return false;
     }
 
 

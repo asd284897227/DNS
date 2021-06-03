@@ -6,5 +6,5 @@ add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(DNS main.cpp)
+add_executable(DNS main.cpp headers/RelayDNSRequestHandler.h headers/DNSMessageHandler.h headers/DNSMessage.h)
 

@@ -70,10 +70,15 @@ public:
         this->qType = ntohs(*(unsigned short *) ptr);
         ptr += 2;
     }
+
+    void setQClassFromPtr(char *&ptr) {
+        this->qClass = ntohs(*(unsigned short *) ptr);
+        ptr += 2;
+    }
 };
 
 class DNSResourceRecord {
-    unsigned short name;//一般为C00C
+    unsigned short name;//一锟斤拷为C00C
     unsigned short type;
     unsigned short clazz;
     int ttl;

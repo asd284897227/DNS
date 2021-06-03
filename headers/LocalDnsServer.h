@@ -1,27 +1,22 @@
 //
 // Created by 55044 on 2021/6/2.
 //
-
 #ifndef DNS_LOCALDNSSERVER_H
 #define DNS_LOCALDNSSERVER_H
-
 #include "DNSMessageHandler.h"
 
-class TheadTaskParams {
-    SOCKET &localDnsServerSocket;
-    SOCKADDR_IN &clientAddr;
-    int len;
-};
+
+
 
 class LocalDnsServer {
 public:
-    DNSFileHandler handler;
+    DNSFileHandler localDNSHandler;
     DNSLRU lru;
     SOCKET serverSocket;
 
     LocalDnsServer() {
         // 读取本地dns规则
-        handler.readLocalIpv4DNSItem("C:\\Users\\wangwei\\CLionProjects\\DNS\\dnsrelay.txt");
+        localDNSHandler.readLocalIpv4DNSItem("C:\\Users\\wangwei\\CLionProjects\\DNS\\dnsrelay.txt");
         // 创建本地dns server socket
         createSocket();
         // 准备接受dns请求

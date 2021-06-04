@@ -9,7 +9,6 @@
 #include "DNSNode.h"
 
 
-
 /**
  * DNS规则处理器
  */
@@ -26,19 +25,25 @@ public:
         ifstream file(filePath);
         string ip, url;
         while (file >> ip >> url) {
-            // 处理ipv4
-            if (getTypeOfIp(ip) == TYPE_IPV4) {
-                DNSNode &node = getDnsNodeByUrl(url);
-                node.setIpv4(ip);
-                cout << "获取ipv4：" << ip << "\t" << url << endl;
-            }
-                // 处理ipv6
-            else {
-                DNSNode &node = getDnsNodeByUrl(url);
-                node.setIpv6(ip);
-                cout << "获取ipv6：" << ip << "\t" << url << endl;
-            }
+            DNSNode &node = getDnsNodeByUrlAndCreate(url);
+            node.setIpv4(ip);
+            cout << "获取ipv4：" << ip << "\t" << url << endl;
+        }
+        file.close();
+    }
 
+
+    /**
+     * 从本地文件中读取dns规则（可以反复读取多个文件，最后一次记录生效）
+     * @param filePath
+     */
+    void readLocalIpv6DNSItem(string filePath) {
+        ifstream file(filePath);
+        string ip, url;
+        while (file >> ip >> url) {
+            DNSNode &node = getDnsNodeByUrlAndCreate(url);
+            node.setIpv6(ip);
+            cout << "获取ipv6：" << ip << "\t" << url << endl;
         }
         file.close();
     }
@@ -49,7 +54,7 @@ public:
      * @return
      */
     string getIpv4ByUrl(string url) {
-        return getDnsNodeByUrl(url).getIpv4();
+        return getDnsNodeByUrlAndCreate(url).getIpv4();
     }
 
     /**
@@ -58,7 +63,7 @@ public:
      * @return
      */
     string getIpv6ByUrl(string url) {
-        return getDnsNodeByUrl(url).getIpv6();
+        return getDnsNodeByUrlAndCreate(url).getIpv6();
     }
 
     /**
@@ -73,18 +78,36 @@ public:
             return TYPE_IPV6;
     }
 
-private:
     /**
      * 根据url获取DNSNode实例，若dnsMap中不存在url键，则创建并返回一个DNSNode实例
      * @param url 
      * @return 
      */
-    DNSNode &getDnsNodeByUrl(string url) {
+    DNSNode &getDnsNodeByUrlAndCreate(string &url) {
         if (dnsMap.find(url) != dnsMap.end()) {
             return dnsMap[url];
         } else {
-            DNSNode &node = dnsMap[url];
-            return node;
+            DNSNode node;
+            node.setUrl(url);
+            dnsMap[url] = node;
+            return dnsMap[url];
+        }
+    }
+
+    DNSNode &getNodeByUrl(string url) {
+        if (dnsMap.find(url) != dnsMap.end()) {
+            return dnsMap[url];
+        } else {
+            DNSNode emptyNode;
+            return emptyNode;
+        }
+    }
+
+    bool containsByUrl(string &url) {
+        if (dnsMap.find(url) != dnsMap.end()) {
+            return true;
+        } else {
+            return false;
         }
     }
 };

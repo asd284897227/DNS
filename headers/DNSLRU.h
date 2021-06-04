@@ -7,6 +7,7 @@
 
 #include "ExecutionUtil.h"
 #include "DNSNode.h"
+#include "../allLibs/allLibs.h"
 
 class DNSLRU {
 public:
@@ -41,15 +42,19 @@ public:
     void insertFirst(DNSNode &node) {
         //互斥量加锁
         WaitForSingleObject(hMutex, INFINITE);
+        if (getSize() >= MAX_LRU_SIZE) {
+            removeLastNode();
+        }
         caches.insert(caches.begin(), node);
         //释放互斥量
         ReleaseMutex(hMutex);
     }
 
+
     /**
      * 删除末尾的元素
      */
-    DNSNode removeLastNode() {
+    DNSNode &removeLastNode() {
         //互斥量加锁
         WaitForSingleObject(hMutex, INFINITE);
         // 业务
@@ -60,6 +65,19 @@ public:
         return node;
     }
 
+    void putToFirst(DNSNode &node) {
+        //互斥量加锁
+        WaitForSingleObject(hMutex, INFINITE);
+        for (list<DNSNode>::iterator ite = caches.begin(); ite != caches.end(); ite++) {
+            if (node.getUrl() == ite->getUrl()) {
+                insertFirst(node);
+                removeNode(ite.operator*());
+            }
+        }
+        //释放互斥量
+        ReleaseMutex(hMutex);
+    }
+
     /**
      * 根据url获取DNSNode
      * @param url
@@ -68,7 +86,6 @@ public:
     DNSNode &getNodeByUrl(string &url) {
         //互斥量加锁
         WaitForSingleObject(hMutex, INFINITE);
-        auto n = caches.begin();
         // 业务
         for (DNSNode &node : caches) {
             if (node.getUrl() == url) {
@@ -78,8 +95,9 @@ public:
             }
         }
         //释放互斥量
-        DNSNode newNode = DNSNode();
-        return newNode;
+        ReleaseMutex(hMutex);
+        DNSNode emptyNode;
+        return emptyNode;
     }
 
 
@@ -95,6 +113,8 @@ public:
         for (ite = caches.begin(); ite != caches.end(); ++ite) {
             if (ite->getUrl() == node.getUrl()) {
                 caches.erase(ite);
+                //释放互斥量
+                ReleaseMutex(hMutex);
                 return true;
             }
         }

@@ -9,40 +9,40 @@ class DNSHeader {
 public:
     unsigned short id;
     unsigned short row2;
-    unsigned short qdCount;
-    unsigned short anCount;
-    unsigned short nsCount;
-    unsigned short arCount;
+    unsigned short qdCount = 0x0;
+    unsigned short anCount = 0x0;
+    unsigned short nsCount = 0x0;
+    unsigned short arCount = 0x0;
 
-    unsigned char getQR(unsigned short row2) {
-        return 0x8000 & row2;
+    unsigned char getQR() {
+        return 0x8000 & row2 >> 15;
     }
 
-    unsigned char getOpcode(unsigned short row2) {
-        return 0x7800 & row2;
+    unsigned char getOpcode() {
+        return 0x7800 & row2 >> 11;
     }
 
-    unsigned char getAA(unsigned short row2) {
-        return 0x0400 & row2;
+    unsigned char getAA() {
+        return 0x0400 & row2 >> 10;
     }
 
-    unsigned char getTC(unsigned short row2) {
-        return 0x0200 & row2;
+    unsigned char getTC() {
+        return 0x0200 & row2 >> 9;
     }
 
-    unsigned char getRD(unsigned short row2) {
-        return 0x0100 & row2;
+    unsigned char getRD() {
+        return 0x0100 & row2 >> 8;
     }
 
-    unsigned char getRA(unsigned short row2) {
-        return 0x0080 & row2;
+    unsigned char getRA() {
+        return 0x0080 & row2 >> 7;
     }
 
-    unsigned char getZ(unsigned short row2) {
-        return 0x0070 & row2;
+    unsigned char getZ() {
+        return 0x0070 & row2 >> 4;
     }
 
-    unsigned char getRcode(unsigned short row2) {
+    unsigned char getRCode() {
         return 0x000F & row2;
     }
 };
@@ -68,12 +68,22 @@ public:
 
     void setQTypeFromPtr(char *&ptr) {
         this->qType = ntohs(*(unsigned short *) ptr);
+        unsigned char a = ptr[0];
+        unsigned char b = ptr[1];
         ptr += 2;
     }
 
     void setQClassFromPtr(char *&ptr) {
         this->qClass = ntohs(*(unsigned short *) ptr);
         ptr += 2;
+    }
+
+    unsigned char getQType() {
+        return qType;
+    }
+
+    unsigned short getQClass() const {
+        return qClass;
     }
 };
 

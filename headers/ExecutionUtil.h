@@ -16,6 +16,7 @@ public:
     static void fatalError(string err) {
         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_RED);
         printf("error£º%s     ¡¾Error Code£º%d¡¿\n", err.data(), GetLastError());
+        fflush(stdout);
         exit(-1);
     }
 
@@ -27,12 +28,21 @@ public:
         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_INTENSITY);
         printf("warn£º%s\n", warn.data());
         setDefaultFontColor();
+        fflush(stdout);
     }
 
     static void log(string log){
         SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN);
         printf("log£º%s\n", log.data());
         setDefaultFontColor();
+        fflush(stdout);
+    }
+
+    static void debug(string log){
+        SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE);
+        printf("debug£º%s\n", log.data());
+        setDefaultFontColor();
+        fflush(stdout);
     }
 
 private:

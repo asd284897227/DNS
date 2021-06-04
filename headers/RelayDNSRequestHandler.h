@@ -32,24 +32,27 @@ public:
         this->length = length;
         this->localDNSSocket = localDNSSocket;
         this->clientAddr = clientAddr;
+        createRelaySocket();
+        sendMessageToExternDNSServer();
+        waitForMessageFromExternDNSServer();
     }
 
     /**
      * 创建连接上层dns服务器Socket的套接字
      * @return
      */
-    SOCKET createRelaySocket() {
+    void createRelaySocket() {
         // 创建套接字
         externSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);//创建外部套接字
         if (externSocket < 0) {
             ExecutionUtil::warning("创建临时Socket套接字（连接上层DNS服务器）失败！\n");
         }
-        // 设置超时时间
-        struct timeval timeOut;
-        timeOut.tv_sec = 5;                 //设置5s超时
-        timeOut.tv_usec = 0;
-        if (setsockopt(externSocket, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeOut, sizeof(timeOut)) < 0) {
-            ExecutionUtil::warning("连接上层DNS服务器Socket套接字，设置超时失败!\n");
+        long long timeout = 1000;
+        if (setsockopt(externSocket, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof(timeout)) < 0) {
+            ExecutionUtil::warning("连接上层DNS服务器Socket套接字，设置读取超时失败!\n");
+        }
+        if (setsockopt(externSocket, SOL_SOCKET, SO_SNDTIMEO, (char *) &timeout, sizeof(timeout)) < 0) {
+            ExecutionUtil::warning("连接上层DNS服务器Socket套接字，设置发送超时失败!\n");
         }
         // 指明连接地址
         externAddr.sin_family = AF_INET;
@@ -75,7 +78,8 @@ public:
      */
     void waitForMessageFromExternDNSServer() {
         int addrLen = sizeof(clientAddr);
-        int lenOfExtern = recvfrom(externSocket, (char *) msg, BUFFER_SIZE, 0, (struct sockaddr *) &externAddr, &addrLen);
+        int lenOfExtern = recvfrom(externSocket, (char *) msg, BUFFER_SIZE, 0, (struct sockaddr *) &externAddr,
+                                   &addrLen);
         if (lenOfExtern < 0) {
             printf("接收外部服务器出错：%d\n", GetLastError());
             return;

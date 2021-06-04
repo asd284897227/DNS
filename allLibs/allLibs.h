@@ -11,11 +11,12 @@
 #define THREAD_COUNT 100
 #define BUFFER_SIZE 1024
 #define MAX_QUESTION_ACCOUNT 20
+#define MAX_LRU_SIZE 100
 
 #pragma comment(lib, "ws2_32.lib")
 
 
-
+#include <thread>
 #include <map>
 #include <string>
 #include <cstring>
@@ -25,17 +26,13 @@
 #include <time.h>
 #include <vector>
 #include "list"
-
-
-#include<windows.h>
 #include <process.h>
 
 #include<stdio.h>
 #include<stdlib.h>
-#include<string.h>
 
-//#include <winsock2.h>
-//#include <WS2tcpip.h>
+#include <winsock2.h>
+#include <WS2tcpip.h>
 
 using namespace std;
 

@@ -3,20 +3,35 @@
 //
 #ifndef DNS_LOCALDNSSERVER_H
 #define DNS_LOCALDNSSERVER_H
+
 #include "DNSMessageHandler.h"
+#include "ThreadPool.h"
 
+class ThreadParams {
+    char *msg;
+    int len;
+    SOCKET &localDNSServerSocket;
+    SOCKADDR_IN &clientAddr;
+    DNSFileHandler &dNSFileHandler;
+    DNSLRU &lru;
+};
 
+void test() {
+    cout << "-----------";
+}
 
 
 class LocalDnsServer {
 public:
-    DNSFileHandler localDNSHandler;
+    DNSFileHandler localDNSFileHandler;
     DNSLRU lru;
     SOCKET serverSocket;
+    ThreadPool pool;
 
     LocalDnsServer() {
         // 读取本地dns规则
-        localDNSHandler.readLocalIpv4DNSItem("C:\\Users\\wangwei\\CLionProjects\\DNS\\dnsrelay.txt");
+        localDNSFileHandler.readLocalIpv4DNSItem("C:\\Users\\55044\\CLionProjects\\DNS\\dnsrelay4.txt");
+        localDNSFileHandler.readLocalIpv6DNSItem("C:\\Users\\55044\\CLionProjects\\DNS\\dnsrelay6.txt");
         // 创建本地dns server socket
         createSocket();
         // 准备接受dns请求
@@ -37,7 +52,7 @@ public:
         }
 
         // 创建socket
-        serverSocket = socket(AF_INET, SOCK_DGRAM, 0);//创建本地套接字
+        serverSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);//创建本地套接字
         if (serverSocket < 0) {
             ExecutionUtil::fatalError("创建本地DNS Server Socket套接字失败！");
         }
@@ -69,13 +84,20 @@ public:
 
         // 尝试读取UDP报文（阻塞）
         int client_length = sizeof(SOCKADDR_IN);
-        int length = recvfrom(serverSocket, msg, BUFFER_SIZE, 0, (struct sockaddr *) &clientAddr, &client_length);
+        int length = recvfrom(serverSocket, msg, BUFFER_SIZE, 0, (SOCKADDR *) &clientAddr, &client_length);
+
         if (length == -1) {
-            ExecutionUtil::warning("Local DNS Server Socket读取UDP请求报文失败！");
+            ExecutionUtil::warning("Local DNS Server Socket读取UDP请求报文异常！");
         } else {
             ExecutionUtil::log("接到udp报文");
-            DNSMessageHandler *clientMessageHandler = new DNSMessageHandler(msg, length, serverSocket, clientAddr, this);
+//            handle();
+            new DNSMessageHandler(msg, length, serverSocket, clientAddr, localDNSFileHandler, lru);
         }
+    }
+
+    void handle() {
+        cout << "-----------------";
+        _beginthread(test, 0, NULL);
     }
 
 };

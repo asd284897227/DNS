@@ -10,6 +10,7 @@
     <file url="file://$PROJECT_DIR$/headers/InitAllStaticField.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/headers/LocalDnsServer.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/headers/RelayDNSRequestHandler.h" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/headers/ThreadPool.h" charset="GBK" />
     <file url="file://$PROJECT_DIR$/main.cpp" charset="GBK" />
     <file url="PROJECT" charset="UTF-8" />
   </component>

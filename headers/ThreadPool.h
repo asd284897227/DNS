@@ -13,11 +13,12 @@ public:
     std::atomic_int count = 100;
 
     ThreadPool() {
+        // 当前座位数  最大座位数
         if ((maxThread = CreateSemaphore(NULL, THREAD_COUNT, THREAD_COUNT, "maxThread")) == NULL) {
             ExecutionUtil::fatalError("创建信号量失败！");
         }
         ExecutionUtil::log("创建信号量成功！");
-        cout << "线程池余量（不准确）" << "--" << count << "---" << endl;
+        cout << "线程池余量" << "--" << count << "---" << endl;
     };
 
     /**
@@ -30,7 +31,7 @@ public:
         if ((hSemaphore = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, "maxThread")) == NULL) {
             ExecutionUtil::fatalError("打开信号量失败！");
         }
-        //隐式信号量减1
+        //隐式信号量减1，阻塞
         WaitForSingleObject(hSemaphore, INFINITE);
         count.operator--();
         cout << "线程池余量" << "--" << count << "---" << endl;

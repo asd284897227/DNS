@@ -45,6 +45,7 @@ public:
         if (getSize() >= MAX_LRU_SIZE) {
             removeLastNode();
         }
+        // insert before
         caches.insert(caches.begin(), node);
         //释放互斥量
         ReleaseMutex(hMutex);
@@ -52,16 +53,12 @@ public:
 
 
     /**
-     * 删除末尾的元素
+     * 删除末尾的元素（线程不安全）
      */
     DNSNode &removeLastNode() {
-        //互斥量加锁
-        WaitForSingleObject(hMutex, INFINITE);
         // 业务
         DNSNode node = caches.back();
         caches.pop_back();
-        //释放互斥量
-        ReleaseMutex(hMutex);
         return node;
     }
 

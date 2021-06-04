@@ -68,8 +68,6 @@ public:
 
     void setQTypeFromPtr(char *&ptr) {
         this->qType = ntohs(*(unsigned short *) ptr);
-        unsigned char a = ptr[0];
-        unsigned char b = ptr[1];
         ptr += 2;
     }
 

@@ -1,9 +1,0 @@
-//
-// Created by 55044 on 2021/6/2.
-//
-
-#ifndef DNS_INITALLSTATICFIELD_H
-#define DNS_INITALLSTATICFIELD_H
-
-
-#endif //DNS_INITALLSTATICFIELD_H

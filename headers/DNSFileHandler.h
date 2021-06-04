@@ -48,35 +48,6 @@ public:
         file.close();
     }
 
-    /**
-     * 根据url获取upv4
-     * @param url
-     * @return
-     */
-    string getIpv4ByUrl(string url) {
-        return getDnsNodeByUrlAndCreate(url).getIpv4();
-    }
-
-    /**
-     * 根据url获取upv6
-     * @param url
-     * @return
-     */
-    string getIpv6ByUrl(string url) {
-        return getDnsNodeByUrlAndCreate(url).getIpv6();
-    }
-
-    /**
-    * 获取ip类型
-    * @param ip
-    * @return
-    */
-    int getTypeOfIp(string &ip) {
-        if (ip.length() <= 15)
-            return TYPE_IPV4;
-        else
-            return TYPE_IPV6;
-    }
 
     /**
      * 根据url获取DNSNode实例，若dnsMap中不存在url键，则创建并返回一个DNSNode实例

@@ -51,8 +51,8 @@ public:
 
     LocalDnsServer() {
         // 读取本地dns规则
-        localDNSFileHandler.readLocalIpv4DNSItem("C:\\Users\\55044\\CLionProjects\\DNS\\dnsrelay4.txt");
-        localDNSFileHandler.readLocalIpv6DNSItem("C:\\Users\\55044\\CLionProjects\\DNS\\dnsrelay6.txt");
+        localDNSFileHandler.readLocalIpv4DNSItem("C:\\Users\\LiuY\\Documents\\WeChat Files\\wxid_cb7o33lw7wdu22\\FileStorage\\File\\2021-06\\DNS\\dnsrelay4.txt");
+        localDNSFileHandler.readLocalIpv6DNSItem("C:\\Users\\LiuY\\Documents\\WeChat Files\\wxid_cb7o33lw7wdu22\\FileStorage\\File\\2021-06\\DNS\\dnsrelay6.txt");
         // 创建本地dns server socket
         createSocket();
         // 准备接受dns请求

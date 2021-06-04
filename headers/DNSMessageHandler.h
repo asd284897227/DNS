@@ -27,21 +27,21 @@ public:
 
     DNSHeader header;
     DNSQuestion questions[MAX_QUESTION_ACCOUNT];
-    SOCKET localDNSServerSocket;
-    SOCKADDR_IN clientAddr;
+    SOCKET &localDNSServerSocket;
+    SOCKADDR_IN &clientAddr;
 
     DNSFileHandler localDnsFileHandler;
     DNSLRU lru;
 
-    DNSMessageHandler(char (&msg)[BUFFER_SIZE], int len, SOCKET &localDNSServerSocket, SOCKADDR_IN &clientAddr,
-                      DNSFileHandler &localDNSFileHandler, DNSLRU &lru) {
+    DNSMessageHandler(char msg[BUFFER_SIZE], int len,
+                      SOCKET &localDNSServerSocket, SOCKADDR_IN &clientAddr,
+                      DNSFileHandler &localDNSFileHandler, DNSLRU &lru)
+            : localDNSServerSocket(localDNSServerSocket), clientAddr(clientAddr) {
         memcpy(this->reqMsg, msg, BUFFER_SIZE);
         memcpy(this->resMsg, msg, BUFFER_SIZE);
         reqPtr = msg;
         resPtr = resMsg;
         this->reqLen = len;
-        this->localDNSServerSocket = localDNSServerSocket;
-        this->clientAddr = clientAddr;
         this->localDnsFileHandler = localDNSFileHandler;
         this->lru = lru;
         handleMessage();

@@ -10,6 +10,12 @@
 #include "../allLibs/allLibs.h"
 
 class DNSLRU {
+
+private:
+    list<DNSNode> caches;
+    HANDLE hMutex;
+    DNSNode emptyNode;
+
 public:
     DNSLRU() {
         //如果按名字打开互斥量失败
@@ -93,7 +99,6 @@ public:
         }
         //释放互斥量
         ReleaseMutex(hMutex);
-        DNSNode emptyNode;
         return emptyNode;
     }
 
@@ -121,9 +126,6 @@ public:
     }
 
 
-private:
-    list<DNSNode> caches;
-    HANDLE hMutex;
 };
 
 #endif //DNS_DNSLRU_H

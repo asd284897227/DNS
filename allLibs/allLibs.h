@@ -12,6 +12,7 @@
 #define BUFFER_SIZE 1024
 #define MAX_QUESTION_ACCOUNT 20
 #define MAX_LRU_SIZE 100
+#define DNS_TTL 0x0
 
 #pragma comment(lib, "ws2_32.lib")
 

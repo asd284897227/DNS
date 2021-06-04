@@ -88,10 +88,10 @@ public:
 };
 
 class DNSResourceRecord {
-    unsigned short name;//һ��ΪC00C
+    unsigned short name;
     unsigned short type;
     unsigned short clazz;
-    int ttl;
+    unsigned int ttl;
     unsigned short rdLength;
     char *rData;
 };

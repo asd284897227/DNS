@@ -81,11 +81,11 @@ public:
         int lenOfExtern = recvfrom(externSocket, (char *) msg, BUFFER_SIZE, 0, (struct sockaddr *) &externAddr,
                                    &addrLen);
         if (lenOfExtern < 0) {
-            printf("接收外部服务器出错：%d\n", GetLastError());
+            ExecutionUtil::log("接收外部服务器出错！\n");
             return;
         } else {
             sendto(localDNSSocket, msg, lenOfExtern, 0, (struct sockaddr *) &clientAddr, sizeof(clientAddr));
-            printf("【成功中转一次DNS请求！】\n");
+            ExecutionUtil::log("【成功中转一次DNS请求！】" + to_string(*((unsigned short *) msg)));
             free(msg);
         }
     }

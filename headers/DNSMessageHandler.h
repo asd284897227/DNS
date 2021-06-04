@@ -33,7 +33,7 @@ public:
     DNSFileHandler localDnsFileHandler;
     DNSLRU lru;
 
-    DNSMessageHandler(char *msg, int len, SOCKET &localDNSServerSocket, SOCKADDR_IN &clientAddr,
+    DNSMessageHandler(char (&msg)[BUFFER_SIZE], int len, SOCKET &localDNSServerSocket, SOCKADDR_IN &clientAddr,
                       DNSFileHandler &localDNSFileHandler, DNSLRU &lru) {
         memcpy(this->reqMsg, msg, BUFFER_SIZE);
         memcpy(this->resMsg, msg, BUFFER_SIZE);
@@ -48,14 +48,11 @@ public:
     }
 
     void handleMessage() {
-        ExecutionUtil::log("准备解析报文");
+        ExecutionUtil::log("解析DNS：" + to_string(*((unsigned short *) reqMsg)));
         processHeaderID_SETP1();
         processQRRow_STEP2();
         processCount_STEP3();
         processQuestions_STEP4();
-        processAnswer_STEP5();
-        processAuthority_STEP6();
-        processAdditional_STEP7();
         tryToHandleDNSCore();
     }
 
@@ -106,27 +103,6 @@ public:
         }
     }
 
-    /**
-     * 处理answer（无需进行）
-     */
-    void processAnswer_STEP5() {
-        // to do
-    }
-
-    /**
-     * 处理授权应答（无需进行）
-     */
-    void processAuthority_STEP6() {
-        // to do
-    }
-
-    /**
-     * 处理附加信息（无需进行）
-     */
-    void processAdditional_STEP7() {
-        // todo
-    }
-
     void tryToHandleDNSCore() {
         for (int i = 0; i < header.qdCount; i++) {
             // 只处理qdcount = 1的情形
@@ -166,6 +142,7 @@ public:
                         // 对照表不存在ipv4记录，则上抛至外部服务器
                     else {
                         RelayDNSRequestHandler reh(reqMsg, reqLen, localDNSServerSocket, clientAddr);
+                        return;
                     }
                 }
             }
@@ -195,14 +172,16 @@ public:
                         // 对照表不存在ipv4记录，则上抛至外部服务器
                     else {
                         RelayDNSRequestHandler reh(reqMsg, reqLen, localDNSServerSocket, clientAddr);
+                        return;
                     }
                 }
             } else {
                 RelayDNSRequestHandler reh(reqMsg, reqLen, localDNSServerSocket, clientAddr);
+                return;
             }
         }
-        int len = resPtr - resMsg;
         sendto(localDNSServerSocket, resMsg, resPtr - resMsg, 0, (SOCKADDR *) &clientAddr, sizeof(SOCKADDR));
+        ExecutionUtil::log("完成处理：" + to_string(*((unsigned short *) reqMsg)));
     }
 
     void addIpResponseToClient(string &ip, int ipType, bool first) {
@@ -235,12 +214,7 @@ public:
                 resPtr += 2;
 
                 for (int i = 0; i < header.qdCount; i++) {
-                    int a = 1 + 1;
-                    char *p = resPtr;
                     resPtr += (questions->qName.length() + 1 + 5);
-                    int le = questions->qName.length();
-                    int l = resPtr - p;
-                    a = 2 + 2;
                 }
             }
             // 指针移至answer
@@ -273,7 +247,7 @@ public:
     }
 
     bool isForbidden(string &ip) {
-        if (ip == "0.0.0.0") {
+        if (ip == "0.0.0.0" || ip == "0:0:0:0:0:0:0:0") {
             // 跳过id
             resPtr += 2;
             // 设置第二行

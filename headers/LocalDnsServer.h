@@ -7,18 +7,38 @@
 #include "DNSMessageHandler.h"
 #include "ThreadPool.h"
 
-class ThreadParams {
-    char *msg;
+class ThreadTask {
+    char msg[BUFFER_SIZE];
     int len;
-    SOCKET &localDNSServerSocket;
-    SOCKADDR_IN &clientAddr;
-    DNSFileHandler &dNSFileHandler;
+    SOCKET localDNSServerSocket;
+    SOCKADDR_IN clientAddr;
+    DNSFileHandler &localDNSFileHandler;
     DNSLRU &lru;
-};
+    ThreadPool &pool;
 
-void test() {
-    cout << "-----------";
-}
+
+public:
+    ThreadTask(char msg[BUFFER_SIZE], int len, SOCKET localDnsServerSocket, SOCKADDR_IN clientAddr,
+               DNSFileHandler &localDnsFileHandler, DNSLRU &lru, ThreadPool &pool) : len(len),
+                                                                                     localDNSServerSocket(
+                                                                                             localDnsServerSocket),
+                                                                                     clientAddr(clientAddr),
+                                                                                     localDNSFileHandler(
+                                                                                             localDnsFileHandler),
+                                                                                     lru(lru),
+                                                                                     pool(pool) {
+        ExecutionUtil::log("接到udp dns报文");
+        memcpy(this->msg, msg, BUFFER_SIZE);
+    }
+
+
+    void run() {
+        pool.tryToCreateThread();
+        new DNSMessageHandler(msg, len, localDNSServerSocket, clientAddr, localDNSFileHandler, lru);
+        Sleep(SIMULATING_DELAY);
+        pool.destroyThread();
+    }
+};
 
 
 class LocalDnsServer {
@@ -89,16 +109,12 @@ public:
         if (length == -1) {
             ExecutionUtil::warning("Local DNS Server Socket读取UDP请求报文异常！");
         } else {
-            ExecutionUtil::log("接到udp报文");
-//            handle();
-            new DNSMessageHandler(msg, length, serverSocket, clientAddr, localDNSFileHandler, lru);
+            ThreadTask *pTask = new ThreadTask(msg, length, serverSocket, clientAddr, localDNSFileHandler, lru, pool);
+            thread t1(&ThreadTask::run, pTask);
+            t1.detach();
         }
     }
 
-    void handle() {
-        cout << "-----------------";
-//        _beginthread(test, 0, NULL);
-    }
 
 };
 

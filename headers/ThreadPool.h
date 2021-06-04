@@ -10,12 +10,14 @@
 class ThreadPool {
 public:
     HANDLE maxThread;
+    std::atomic_int count = 100;
 
     ThreadPool() {
         if ((maxThread = CreateSemaphore(NULL, THREAD_COUNT, THREAD_COUNT, "maxThread")) == NULL) {
             ExecutionUtil::fatalError("创建信号量失败！");
         }
         ExecutionUtil::log("创建信号量成功！");
+        cout << "线程池余量（不准确）" << "--" << count << "---" << endl;
     };
 
     /**
@@ -30,6 +32,8 @@ public:
         }
         //隐式信号量减1
         WaitForSingleObject(hSemaphore, INFINITE);
+        count.operator--();
+        cout << "线程池余量" << "--" << count << "---" << endl;
     }
 
     /**
@@ -44,6 +48,8 @@ public:
         }
         //显式信号量加1
         ReleaseSemaphore(hSemaphore, 1, NULL);
+        count.operator++();
+        cout << "线程池余量" << "--" << count << "---" << endl;
     }
 };
 

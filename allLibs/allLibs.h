@@ -13,7 +13,7 @@
 #define MAX_QUESTION_ACCOUNT 20
 #define MAX_LRU_SIZE 100
 #define DNS_TTL 0x0
-#define SIMULATING_DELAY 100
+#define SIMULATING_DELAY 1000
 
 #pragma comment(lib, "ws2_32.lib")
 

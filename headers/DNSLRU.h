@@ -119,6 +119,7 @@ public:
             }
         }
         // Õ∑≈ª•≥‚¡ø
+        ReleaseMutex(hMutex);
         return false;
     }
 

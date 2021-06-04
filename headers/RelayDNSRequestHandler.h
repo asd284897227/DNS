@@ -15,11 +15,11 @@ public:
 
 
     // 本机dns服务器套接字和ip
-    SOCKET localDNSSocket;
-    SOCKADDR_IN clientAddr;
+    SOCKET &localDNSSocket;
+    SOCKADDR_IN &clientAddr;
 
     // 中继消息指针和报文长度
-    char *msg;
+    char (&msg)[BUFFER_SIZE];
     int length;
 
     /**
@@ -27,15 +27,15 @@ public:
      * @param msg 报文缓冲区首地址
      * @param length 报文长度
      */
-    RelayDNSRequestHandler(char msg[], int length, SOCKET &localDNSSocket, SOCKADDR_IN &clientAddr) {
-        this->msg = msg;
+    RelayDNSRequestHandler(char (&msg)[BUFFER_SIZE], int length,
+                           SOCKET &localDNSSocket, SOCKADDR_IN &clientAddr)
+            : msg(msg), localDNSSocket(localDNSSocket), clientAddr(clientAddr) {
         this->length = length;
-        this->localDNSSocket = localDNSSocket;
-        this->clientAddr = clientAddr;
         createRelaySocket();
         sendMessageToExternDNSServer();
         waitForMessageFromExternDNSServer();
     }
+
 
     /**
      * 创建连接上层dns服务器Socket的套接字
@@ -86,7 +86,6 @@ public:
         } else {
             sendto(localDNSSocket, msg, lenOfExtern, 0, (struct sockaddr *) &clientAddr, sizeof(clientAddr));
             ExecutionUtil::log("【成功中转一次DNS请求！】" + to_string(*((unsigned short *) msg)));
-            free(msg);
         }
     }
 };

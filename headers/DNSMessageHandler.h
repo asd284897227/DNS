@@ -37,8 +37,8 @@ public:
                       SOCKET &localDNSServerSocket, SOCKADDR_IN &clientAddr,
                       DNSFileHandler &localDNSFileHandler, DNSLRU &lru)
             : localDNSServerSocket(localDNSServerSocket), clientAddr(clientAddr) {
-        memcpy(this->reqMsg, msg, BUFFER_SIZE);
-        memcpy(this->resMsg, msg, BUFFER_SIZE);
+        memcpy(this->reqMsg, msg, len);
+        memcpy(this->resMsg, msg, len);
         reqPtr = msg;
         resPtr = resMsg;
         this->reqLen = len;
@@ -141,7 +141,7 @@ public:
                     }
                         // 对照表不存在ipv4记录，则上抛至外部服务器
                     else {
-                        RelayDNSRequestHandler reh(reqMsg, reqLen, localDNSServerSocket, clientAddr);
+                        RelayDNSRequestHandler(reqMsg, reqLen, localDNSServerSocket, clientAddr);
                         return;
                     }
                 }
@@ -171,12 +171,12 @@ public:
                     }
                         // 对照表不存在ipv4记录，则上抛至外部服务器
                     else {
-                        RelayDNSRequestHandler reh(reqMsg, reqLen, localDNSServerSocket, clientAddr);
+                        RelayDNSRequestHandler(reqMsg, reqLen, localDNSServerSocket, clientAddr);
                         return;
                     }
                 }
             } else {
-                RelayDNSRequestHandler reh(reqMsg, reqLen, localDNSServerSocket, clientAddr);
+                RelayDNSRequestHandler(reqMsg, reqLen, localDNSServerSocket, clientAddr);
                 return;
             }
         }

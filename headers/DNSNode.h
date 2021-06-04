@@ -14,22 +14,15 @@ class DNSNode {
 public:
     string url;
     string ipv4;
-    bool isIpv4Empty = true;
-
     string ipv6;
-    bool isIpv6Empty = true;
-
+    std::time_t timestamp;
 
     DNSNode() {
-    }
-
-    DNSNode(bool isEmpty) {
-        this->isIpv4Empty = isEmpty;
+        timestamp = std::time(0);
     }
 
     DNSNode(const string &url, const string &ipv4, const string &ipv6) : url(url), ipv4(ipv4), ipv6(ipv6) {
-        if (!ipv4.empty()) this->isIpv4Empty = false;
-        else if (!ipv6.empty()) this->isIpv6Empty = false;
+        timestamp = std::time(0);
     }
 
     const string &getUrl() const {
@@ -40,22 +33,37 @@ public:
         this->url = url;
     }
 
-    const string &getIpv4() const {
-        return ipv4;
-    }
-
     void setIpv4(const string &ipv4) {
         this->ipv4 = ipv4;
-        if (!ipv4.empty())this->isIpv4Empty = false;
+        timestamp = std::time(0);
     }
 
-    const string &getIpv6() const {
+    string getIpv6OfCache() const {
+        if (std::time(0) - timestamp >= LRU_TTL * 60)
+            return "";
+        else
+            return ipv6;
+    }
+
+
+    string getIpv4OfCache() const {
+        if (std::time(0) - timestamp >= LRU_TTL * 60)
+            return "";
+        else
+            return ipv4;
+    }
+
+    string getIpv6() const {
         return ipv6;
+    }
+
+    string getIpv4() const {
+        return ipv4;
     }
 
     void setIpv6(const string &ipv6) {
         this->ipv6 = ipv6;
-        if (!ipv6.empty())this->isIpv6Empty = false;
+        timestamp = std::time(0);
     }
 };
 

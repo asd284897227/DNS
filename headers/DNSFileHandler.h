@@ -16,20 +16,21 @@ class DNSFileHandler {
 private:
     map<string, DNSNode> dnsMap;
     DNSNode emptyNode;
-public:
+    mutable std::shared_mutex mutex;
 
     /**
      * 从本地文件中读取dns规则（可以反复读取多个文件，最后一次记录生效）
-     * @param filePath
      */
-    void readLocalIpv4DNSItem(string filePath) {
-        ifstream file(filePath);
+    void readLocalIpv4DNSItem() {
+        ifstream file(IPV4_RULES_FILE_PATH);
         string ip, url;
+        mutex.lock();
         while (file >> ip >> url) {
-            DNSNode &node = getDnsNodeByUrlAndCreate(url);
+            DNSNode &node = getDnsNodeByUrlAndCreateWithoutLock(url);
             node.setIpv4(ip);
             cout << "获取ipv4：" << ip << "\t" << url << endl;
         }
+        mutex.unlock();
         file.close();
     }
 
@@ -38,31 +39,37 @@ public:
      * 从本地文件中读取dns规则（可以反复读取多个文件，最后一次记录生效）
      * @param filePath
      */
-    void readLocalIpv6DNSItem(string filePath) {
-        ifstream file(filePath);
+    void readLocalIpv6DNSItem() {
+        ifstream file(IPV6_RULES_FILE_PATH);
         string ip, url;
+        mutex.lock();
         while (file >> ip >> url) {
-            DNSNode &node = getDnsNodeByUrlAndCreate(url);
+            DNSNode &node = getDnsNodeByUrlAndCreateWithoutLock(url);
             node.setIpv6(ip);
             cout << "获取ipv6：" << ip << "\t" << url << endl;
         }
+        mutex.unlock();
         file.close();
     }
 
-
+    /**
+     * 更新任务
+     */
     void updateTask() {
         while (1) {
-            Sleep(LOCAL_DNS_RULES_TTL);
-
+            Sleep(LOCAL_DNS_RULES_TTL * 60 * 1000);
+            readLocalIpv4DNSItem();
+            readLocalIpv6DNSItem();
+            cout << "**********************************更新本地DNS规则完成！**********************************" << endl;
         }
     }
 
     /**
-     * 根据url获取DNSNode实例，若dnsMap中不存在url键，则创建并返回一个DNSNode实例
-     * @param url 
-     * @return 
+     * 根据url获取DNSNode实例，若dnsMap中不存在url键，则创建并返回一个DNSNode实例（非线程安全）
+     * @param url
+     * @return
      */
-    DNSNode &getDnsNodeByUrlAndCreate(string &url) {
+    DNSNode &getDnsNodeByUrlAndCreateWithoutLock(string &url) {
         if (dnsMap.find(url) != dnsMap.end()) {
             return dnsMap[url];
         } else {
@@ -73,30 +80,52 @@ public:
         }
     }
 
+public:
+    DNSFileHandler() {
+        readLocalIpv4DNSItem();
+        readLocalIpv6DNSItem();
+        // 定时刷新DNS规则
+        thread t1(&DNSFileHandler::updateTask, this);
+        t1.detach();
+    }
+
+
     /**
      * 根据url获取节点，若不存在url键则返回空节点
      * @param url
      * @return
      */
-    DNSNode &getNodeByUrl(string url) {
+    DNSNode getNodeByUrl(string url) {
+        // 加读锁
+        mutex.lock_shared();
         if (dnsMap.find(url) != dnsMap.end()) {
-            return dnsMap[url];
+            DNSNode clone = dnsMap[url];
+            // 取消读锁
+            mutex.unlock_shared();
+            return clone;
         } else {
+            // 取消读锁
+            mutex.unlock_shared();
             return emptyNode;
         }
     }
 
     /**
-     * 返回当前记录中是否存在url的节点
+     * 根据url获取ipv4
      * @param url
      * @return
      */
-    bool containsByUrl(string &url) {
-        if (dnsMap.find(url) != dnsMap.end()) {
-            return true;
-        } else {
-            return false;
-        }
+    string getIpv4ByUrl(string &url) {
+        return getNodeByUrl(url).getIpv4();
+    }
+
+    /**
+    * 根据url获取ipv6
+    * @param url
+    * @return
+    */
+    string getIpv6ByUrl(string &url) {
+        return getNodeByUrl(url).getIpv6();
     }
 };
 

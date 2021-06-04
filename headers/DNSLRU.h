@@ -13,24 +13,9 @@ class DNSLRU {
 
 private:
     list<DNSNode> caches;
-    HANDLE hMutex;
+    mutable std::shared_mutex mutex;
     DNSNode emptyNode;
 
-public:
-    DNSLRU() {
-        //如果按名字打开互斥量失败
-        if ((hMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, "Mutex.Test")) == NULL) {
-            // 创建互斥量，若失败
-            if ((hMutex = CreateMutex(NULL, FALSE, "Mutex.Test")) == NULL) {
-                //打印文字，提示创建互斥量失败
-                ExecutionUtil::fatalError("无法创建互斥锁！");
-            }
-                // 成功创建互斥量
-            else {
-                ExecutionUtil::log("成功创建互斥锁！");
-            }
-        }
-    }
 
     /**
      * 获取集合大小（线程不安全）
@@ -40,27 +25,9 @@ public:
         return caches.size();
     }
 
-
     /**
-     * 在头部添加元素
-     * @param node
-     */
-    void insertFirst(DNSNode &node) {
-        //互斥量加锁
-        WaitForSingleObject(hMutex, INFINITE);
-        if (getSize() >= MAX_LRU_SIZE) {
-            removeLastNode();
-        }
-        // insert before
-        caches.insert(caches.begin(), node);
-        //释放互斥量
-        ReleaseMutex(hMutex);
-    }
-
-
-    /**
-     * 删除末尾的元素（线程不安全）
-     */
+    * 删除末尾的元素（线程不安全）
+    */
     DNSNode &removeLastNode() {
         // 业务
         DNSNode node = caches.back();
@@ -68,17 +35,69 @@ public:
         return node;
     }
 
+    /**
+     * 删除节点（线程不安全）
+     * @param node
+     * @return
+     */
+    bool removeNode(DNSNode &node) {
+        list<DNSNode>::iterator ite;
+        for (ite = caches.begin(); ite != caches.end(); ++ite) {
+            if (ite->getUrl() == node.getUrl()) {
+                caches.erase(ite);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 在头部添加元素（线程不安全）
+     * @param node
+     */
+    void insertFirstWithoutLock(DNSNode &node) {
+        if (getSize() >= MAX_LRU_SIZE) {
+            removeLastNode();
+        }
+        // insert before
+        caches.insert(caches.begin(), node);
+    }
+public:
+
+
+
+    /**
+     * 在头部添加元素
+     * @param node
+     */
+    void insertFirst(DNSNode &node) {
+        // 加写锁
+        mutex.lock();
+        if (getSize() >= MAX_LRU_SIZE) {
+            removeLastNode();
+        }
+        // insert before
+        caches.insert(caches.begin(), node);
+        // 释放写锁
+        mutex.unlock();
+    }
+
+
+    /**
+     * 移到首位
+     * @param node
+     */
     void putToFirst(DNSNode &node) {
-        //互斥量加锁
-        WaitForSingleObject(hMutex, INFINITE);
+        // 加写锁
+        mutex.lock();
         for (list<DNSNode>::iterator ite = caches.begin(); ite != caches.end(); ite++) {
             if (node.getUrl() == ite->getUrl()) {
-                insertFirst(node);
+                insertFirstWithoutLock(node);
                 removeNode(ite.operator*());
             }
         }
-        //释放互斥量
-        ReleaseMutex(hMutex);
+        // 释放写锁
+        mutex.unlock();
     }
 
     /**
@@ -86,46 +105,22 @@ public:
      * @param url
      * @return
      */
-    DNSNode &getNodeByUrl(string &url) {
-        //互斥量加锁
-        WaitForSingleObject(hMutex, INFINITE);
+    DNSNode getNodeByUrl(string &url) {
+        // 加读锁
+        mutex.lock_shared();
         // 业务
         for (DNSNode &node : caches) {
             if (node.getUrl() == url) {
-                //释放互斥量
-                ReleaseMutex(hMutex);
-                return node;
+                DNSNode clone = node;
+                // 释放读锁
+                mutex.unlock_shared();
+                return clone;
             }
         }
         //释放互斥量
-        ReleaseMutex(hMutex);
+        mutex.unlock_shared();
         return emptyNode;
     }
-
-
-    /**
-     * 删除节点
-     * @param node
-     * @return
-     */
-    bool removeNode(DNSNode &node) {
-        //互斥量加锁
-        WaitForSingleObject(hMutex, INFINITE);
-        list<DNSNode>::iterator ite;
-        for (ite = caches.begin(); ite != caches.end(); ++ite) {
-            if (ite->getUrl() == node.getUrl()) {
-                caches.erase(ite);
-                //释放互斥量
-                ReleaseMutex(hMutex);
-                return true;
-            }
-        }
-        //释放互斥量
-        ReleaseMutex(hMutex);
-        return false;
-    }
-
-
 };
 
 #endif //DNS_DNSLRU_H

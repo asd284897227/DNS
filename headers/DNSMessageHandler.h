@@ -30,20 +30,19 @@ public:
     SOCKET &localDNSServerSocket;
     SOCKADDR_IN &clientAddr;
 
-    DNSFileHandler localDnsFileHandler;
-    DNSLRU lru;
+    DNSFileHandler &localDnsFileHandler;
+    DNSLRU &lru;
 
     DNSMessageHandler(char msg[BUFFER_SIZE], int len,
                       SOCKET &localDNSServerSocket, SOCKADDR_IN &clientAddr,
                       DNSFileHandler &localDNSFileHandler, DNSLRU &lru)
-            : localDNSServerSocket(localDNSServerSocket), clientAddr(clientAddr) {
+            : localDNSServerSocket(localDNSServerSocket), clientAddr(clientAddr),
+              localDnsFileHandler(localDNSFileHandler), lru(lru) {
         memcpy(this->reqMsg, msg, len);
         memcpy(this->resMsg, msg, len);
         reqPtr = msg;
         resPtr = resMsg;
         this->reqLen = len;
-        this->localDnsFileHandler = localDNSFileHandler;
-        this->lru = lru;
         handleMessage();
     }
 
@@ -115,23 +114,23 @@ public:
             string ip;
             int ipType = TYPE_IPV4;
             // 查询cache
-            DNSNode &nodeInCache = lru.getNodeByUrl(q.qName);
+            DNSNode nodeInCache = lru.getNodeByUrl(q.qName);
 
             if (qType == 0x01 && header.getOpcode() == 0x0) {
                 ipType = TYPE_IPV4;
                 // cache中存在ipv4记录
-                if (!nodeInCache.isIpv4Empty) {
-                    ip = nodeInCache.getIpv4();
+                if (!nodeInCache.getIpv4OfCache().empty()) {
+                    ip = nodeInCache.getIpv4OfCache();
                     lru.putToFirst(nodeInCache);
                     addIpResponseToClient(ip, TYPE_IPV4, i == 0);
                 }
                     // cache不存在ipv4记录
                 else {
-                    DNSNode &nodeInMap = localDnsFileHandler.getNodeByUrl(q.qName);
+                    DNSNode nodeInMap = localDnsFileHandler.getNodeByUrl(q.qName);
                     // 对照表存在ipv4记录
-                    if (!nodeInMap.isIpv4Empty) {
+                    if (!nodeInMap.getIpv4().empty()) {
                         ip = nodeInMap.getIpv4();
-                        if (!nodeInCache.isIpv6Empty) {
+                        if (!nodeInCache.getIpv6OfCache().empty()) {
                             nodeInCache.setIpv4(ip);
                             lru.putToFirst(nodeInCache);
                         } else {
@@ -150,18 +149,18 @@ public:
             else if (qType == 0x1c && header.getOpcode() == 0x0) {
                 ipType = TYPE_IPV6;
                 // cache中存在ipv6记录
-                if (!nodeInCache.isIpv6Empty) {
-                    ip = nodeInCache.getIpv6();
+                if (!nodeInCache.getIpv6OfCache().empty()) {
+                    ip = nodeInCache.getIpv6OfCache();
                     lru.putToFirst(nodeInCache);
                     addIpResponseToClient(ip, TYPE_IPV6, i == 0);
                 }
                     // cache不存在ipv6记录
                 else {
-                    DNSNode &nodeInMap = localDnsFileHandler.getNodeByUrl(q.qName);
+                    DNSNode nodeInMap = localDnsFileHandler.getNodeByUrl(q.qName);
                     // 对照表存在ipv6记录
-                    if (!nodeInMap.isIpv6Empty) {
+                    if (!nodeInMap.getIpv6().empty()) {
                         ip = nodeInMap.getIpv6();
-                        if (!nodeInCache.isIpv4Empty) {
+                        if (!nodeInCache.getIpv4OfCache().empty()) {
                             nodeInCache.setIpv6(ip);
                             lru.putToFirst(nodeInCache);
                         } else {

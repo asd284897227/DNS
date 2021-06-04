@@ -14,7 +14,7 @@ public:
 
     ThreadPool() {
         // 当前座位数  最大座位数
-        if ((maxThread = CreateSemaphore(NULL, THREAD_COUNT, THREAD_COUNT, "maxThread")) == NULL) {
+        if ((maxThread = CreateSemaphore(NULL, MAX_THREAD_COUNT, MAX_THREAD_COUNT, "maxThread")) == NULL) {
             ExecutionUtil::fatalError("创建信号量失败！");
         }
         ExecutionUtil::log("创建信号量成功！");

@@ -54,9 +54,6 @@ public:
     ThreadPool pool;
 
     LocalDnsServer() {
-        // 读取本地dns规则
-        localDNSFileHandler.readLocalIpv4DNSItem("C:\\Users\\55044\\CLionProjects\\DNS\\dnsrelay4.txt");
-        localDNSFileHandler.readLocalIpv6DNSItem("C:\\Users\\55044\\CLionProjects\\DNS\\dnsrelay6.txt");
         // 创建本地dns server socket
         createSocket();
         // 准备接受dns请求

@@ -34,7 +34,7 @@ public:
     DNSLRU lru;
 
     DNSMessageHandler(char *msg, int len, SOCKET &localDNSServerSocket, SOCKADDR_IN &clientAddr,
-                      DNSFileHandler &dNSFileHandler, DNSLRU &lru) {
+                      DNSFileHandler &localDNSFileHandler, DNSLRU &lru) {
         memcpy(this->reqMsg, msg, BUFFER_SIZE);
         memcpy(this->resMsg, msg, BUFFER_SIZE);
         reqPtr = msg;
@@ -42,7 +42,7 @@ public:
         this->reqLen = len;
         this->localDNSServerSocket = localDNSServerSocket;
         this->clientAddr = clientAddr;
-        this->localDnsFileHandler = dNSFileHandler;
+        this->localDnsFileHandler = localDNSFileHandler;
         this->lru = lru;
         handleMessage();
     }

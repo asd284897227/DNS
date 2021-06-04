@@ -254,7 +254,7 @@ public:
             *((unsigned short *) resPtr) = htons(0x1);
             resPtr += 2;
             // ttl
-            *((unsigned int *) resPtr) = htonl(0x0);  // 0xe10
+            *((unsigned int *) resPtr) = htonl(DNS_TTL);  // 0xe10
             resPtr += 4;
             // len
             *((unsigned int *) resPtr) = ipType == TYPE_IPV4 ? htons(0x04) : htons(0x10);

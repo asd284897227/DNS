@@ -119,7 +119,6 @@ public:
             }
         }
         // Õ∑≈ª•≥‚¡ø
-        DNSNode newNode = DNSNode();
         return false;
     }
 

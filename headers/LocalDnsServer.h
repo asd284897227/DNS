@@ -34,7 +34,9 @@ public:
 
     void run() {
         pool.tryToCreateThread();
-        new DNSMessageHandler(msg, len, localDNSServerSocket, clientAddr, localDNSFileHandler, lru);
+        DNSMessageHandler *pHandler = new DNSMessageHandler(msg, len, localDNSServerSocket, clientAddr,
+                                                            localDNSFileHandler, lru);
+        delete pHandler;
         Sleep(SIMULATING_DELAY);
         pool.destroyThread();
     }

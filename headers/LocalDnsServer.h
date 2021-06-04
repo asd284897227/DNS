@@ -10,7 +10,7 @@
 class ThreadTask {
     char msg[BUFFER_SIZE];
     int len;
-    SOCKET localDNSServerSocket;
+    SOCKET &localDNSServerSocket;
     SOCKADDR_IN clientAddr;
     DNSFileHandler &localDNSFileHandler;
     DNSLRU &lru;
@@ -18,15 +18,17 @@ class ThreadTask {
 
 
 public:
-    ThreadTask(char msg[BUFFER_SIZE], int len, SOCKET localDnsServerSocket, SOCKADDR_IN clientAddr,
-               DNSFileHandler &localDnsFileHandler, DNSLRU &lru, ThreadPool &pool) : len(len),
-                                                                                     localDNSServerSocket(
-                                                                                             localDnsServerSocket),
-                                                                                     clientAddr(clientAddr),
-                                                                                     localDNSFileHandler(
-                                                                                             localDnsFileHandler),
-                                                                                     lru(lru),
-                                                                                     pool(pool) {
+    ThreadTask(char msg[BUFFER_SIZE], int len,
+               SOCKET &localDnsServerSocket, SOCKADDR_IN clientAddr,
+               DNSFileHandler &localDnsFileHandler, DNSLRU &lru,
+               ThreadPool &pool) : len(len),
+                                   localDNSServerSocket(
+                                           localDnsServerSocket),
+                                   clientAddr(clientAddr),
+                                   localDNSFileHandler(
+                                           localDnsFileHandler),
+                                   lru(lru),
+                                   pool(pool) {
         ExecutionUtil::log("接到udp dns报文");
         memcpy(this->msg, msg, BUFFER_SIZE);
     }
@@ -38,6 +40,8 @@ public:
                                                             localDNSFileHandler, lru);
         Sleep(SIMULATING_DELAY);
         pool.destroyThread();
+        delete pHandler;
+        delete this;
     }
 };
 

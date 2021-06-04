@@ -97,7 +97,7 @@ public:
 
     void handle() {
         cout << "-----------------";
-        _beginthread(test, 0, NULL);
+//        _beginthread(test, 0, NULL);
     }
 
 };

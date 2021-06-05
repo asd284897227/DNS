@@ -47,7 +47,7 @@ public:
     }
 
     void handleMessage() {
-        ExecutionUtil::log("½âÎöDNS£º" + to_string(*((unsigned short *) reqMsg)));
+        ExecutionUtil::log("è§£æDNSï¼š" + to_string(*((unsigned short *) reqMsg)));
         processHeaderID_SETP1();
         processQRRow_STEP2();
         processCount_STEP3();
@@ -56,7 +56,7 @@ public:
     }
 
     /**
-     * ´¦Àíheader id×Ö¶Î£¨2×Ö½Ú£©
+     * å¤„ç†header idå­—æ®µï¼ˆ2å­—èŠ‚ï¼‰
      */
     void processHeaderID_SETP1() {
         // todo
@@ -65,7 +65,7 @@ public:
     }
 
     /**
-     * ´¦Àíheader µÚ¶şĞĞ
+     * å¤„ç†header ç¬¬äºŒè¡Œ
      */
     void processQRRow_STEP2() {
         header.row2 = ntohs(*(unsigned short *) reqPtr);
@@ -73,7 +73,7 @@ public:
     }
 
     /**
-     * ´¦Àí4¸öaccount
+     * å¤„ç†4ä¸ªaccount
      */
     void processCount_STEP3() {
         header.qdCount = ntohs(*(unsigned short *) reqPtr);
@@ -90,7 +90,7 @@ public:
     }
 
     /**
-     * ½âÎöquestions
+     * è§£æquestions
      */
     void processQuestions_STEP4() {
         for (int i = 0; i < header.qdCount; i++) {
@@ -104,58 +104,58 @@ public:
 
     void tryToHandleDNSCore() {
         for (int i = 0; i < header.qdCount; i++) {
-            // Ö»´¦Àíqdcount = 1µÄÇéĞÎ
+            // åªå¤„ç†qdcount = 1çš„æƒ…å½¢
             if (i != 0) break;
 
-            // »ñÈ¡Ğ­ÒéÀàĞÍ£ºipv4/ipv6
+            // è·å–åè®®ç±»å‹ï¼šipv4/ipv6
             DNSQuestion q = questions[i];
             unsigned char qType = q.getQType();
-            // ip½á¹û
+            // ipç»“æœ
             string ip;
             int ipType = TYPE_IPV4;
-            // ²éÑ¯cache
+            // æŸ¥è¯¢cache
             DNSCacheNode nodeInCache = lru.getNodeByUrl(q.qName);
             if (qType == 0x01 && header.getOpcode() == 0x0) {
                 ipType = TYPE_IPV4;
-                // ´æÔÚcache
+                // å­˜åœ¨cache
                 if (!nodeInCache.isIpv4Empty()) {
-                    ExecutionUtil::log(q.qName + " ipv4" + "´æÔÚ»º´æ£¡");
+                    ExecutionUtil::log(q.qName + " ipv4" + "å­˜åœ¨ç¼“å­˜ï¼");
                     lru.putToFirst(nodeInCache);
                     addCacheNodeMessage(nodeInCache, TYPE_IPV4);
                 }
-                    // cache²»´æÔÚipv4¼ÇÂ¼
+                    // cacheä¸å­˜åœ¨ipv4è®°å½•
                 else {
                     DNSNode nodeInMap = localDnsFileHandler.getNodeByUrl(q.qName);
-                    // ¶ÔÕÕ±í´æÔÚipv4¼ÇÂ¼
+                    // å¯¹ç…§è¡¨å­˜åœ¨ipv4è®°å½•
                     if (!nodeInMap.getIpv4().empty()) {
                         ip = nodeInMap.getIpv4();
                         addIpResponseToClient(ip, TYPE_IPV4, i == 0);
                     }
-                        // ¶ÔÕÕ±í²»´æÔÚipv4¼ÇÂ¼£¬ÔòÉÏÅ×ÖÁÍâ²¿·şÎñÆ÷
+                        // å¯¹ç…§è¡¨ä¸å­˜åœ¨ipv4è®°å½•ï¼Œåˆ™ä¸ŠæŠ›è‡³å¤–éƒ¨æœåŠ¡å™¨
                     else {
                         RelayDNSRequestHandler(reqMsg, reqLen, q.qName, ipType, lru, localDNSServerSocket, clientAddr);
                         return;
                     }
                 }
             }
-                // ²éÑ¯ipv6
+                // æŸ¥è¯¢ipv6
             else if (qType == 0x1c && header.getOpcode() == 0x0) {
                 ipType = TYPE_IPV6;
-                // ´æÔÚcache
-                ExecutionUtil::log(q.qName + " ipv6" + "´æÔÚ»º´æ£¡");
+                // å­˜åœ¨cache
+                ExecutionUtil::log(q.qName + " ipv6" + "å­˜åœ¨ç¼“å­˜ï¼");
                 if (!nodeInCache.isIpv6Empty()) {
                     lru.putToFirst(nodeInCache);
                     addCacheNodeMessage(nodeInCache, TYPE_IPV6);
                 }
-                    // cache²»´æÔÚipv4¼ÇÂ¼
+                    // cacheä¸å­˜åœ¨ipv4è®°å½•
                 else {
                     DNSNode nodeInMap = localDnsFileHandler.getNodeByUrl(q.qName);
-                    // ¶ÔÕÕ±í´æÔÚipv4¼ÇÂ¼
+                    // å¯¹ç…§è¡¨å­˜åœ¨ipv4è®°å½•
                     if (!nodeInMap.getIpv6().empty()) {
                         ip = nodeInMap.getIpv6();
                         addIpResponseToClient(ip, TYPE_IPV6, i == 0);
                     }
-                        // ¶ÔÕÕ±í²»´æÔÚipv4¼ÇÂ¼£¬ÔòÉÏÅ×ÖÁÍâ²¿·şÎñÆ÷
+                        // å¯¹ç…§è¡¨ä¸å­˜åœ¨ipv4è®°å½•ï¼Œåˆ™ä¸ŠæŠ›è‡³å¤–éƒ¨æœåŠ¡å™¨
                     else {
                         RelayDNSRequestHandler(reqMsg, reqLen, q.qName, ipType, lru, localDNSServerSocket, clientAddr);
                         return;
@@ -167,11 +167,11 @@ public:
             }
         }
         sendto(localDNSServerSocket, resMsg, resPtr - resMsg, 0, (SOCKADDR *) &clientAddr, sizeof(SOCKADDR));
-        ExecutionUtil::log("Íê³É´¦Àí£º" + to_string(*((unsigned short *) reqMsg)));
+        ExecutionUtil::log("å®Œæˆå¤„ç†ï¼š" + to_string(*((unsigned short *) reqMsg)));
     }
 
     /**
-     * ¶ÁÈ¡cacheÏìÓ¦
+     * è¯»å–cacheå“åº”
      * @param node
      * @param type
      */
@@ -179,21 +179,23 @@ public:
         if (type == TYPE_IPV4) {
             memcpy(resMsg, node.getIpv4(), node.getIpv4Len());
             resPtr = resMsg + node.getIpv4Len();
+            memcpy(resMsg, reqMsg, 2);
         } else if (type == TYPE_IPV6) {
             memcpy(resMsg, node.getIpv6(), node.getIpv6Len());
+            memcpy(resMsg, reqMsg, 2);
             resPtr = resMsg + node.getIpv6Len();
         }
     }
 
     void addIpResponseToClient(string &ip, int ipType, bool first) {
-        // ¼ì²éÊÇ·ñ½ûÖ¹
+        // æ£€æŸ¥æ˜¯å¦ç¦æ­¢
         if (!isForbidden(ip)) {
-            // È·±£Ö¸ÕëÒÆÖÁanswer
+            // ç¡®ä¿æŒ‡é’ˆç§»è‡³answer
             if (first) {
-                // Ìø¹ıid
+                // è·³è¿‡id
                 resPtr += 2;
 
-                // ÉèÖÃµÚ¶şĞĞ
+                // è®¾ç½®ç¬¬äºŒè¡Œ
                 (*(unsigned short *) resPtr) = htons(0x8180);
                 resPtr += 2;
 
@@ -202,7 +204,7 @@ public:
                 (*(unsigned short *) resPtr) = htons(header.qdCount);
                 resPtr += 2;
 
-                // anscount»ùµØÖ·
+                // anscountåŸºåœ°å€
                 (*(unsigned short *) resPtr) = htons(0x1);
                 resPtr += 2;
 
@@ -218,7 +220,7 @@ public:
                     resPtr += (questions->qName.length() + 2 + 4);
                 }
             }
-            // Ö¸ÕëÒÆÖÁanswer
+            // æŒ‡é’ˆç§»è‡³answer
             // name
             *((unsigned short *) resPtr) = htons(0xC00C);
             resPtr += 2;
@@ -249,12 +251,12 @@ public:
 
     bool isForbidden(string &ip) {
         if (ip == "0.0.0.0" || ip == "0:0:0:0:0:0:0:0") {
-            // Ìø¹ıid
+            // è·³è¿‡id
             resPtr += 2;
-            // ÉèÖÃµÚ¶şĞĞ
+            // è®¾ç½®ç¬¬äºŒè¡Œ
             (*(unsigned short *) resPtr) = htons(0x8183);
             resPtr += 2;
-            // ÉèÖÃËÄ¸öaccount
+            // è®¾ç½®å››ä¸ªaccount
             (*(unsigned short *) resPtr) = htons(0x0);
             resPtr += 2;
             (*(unsigned short *) resPtr) = htons(0x0);

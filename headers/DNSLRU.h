@@ -28,27 +28,11 @@ private:
     /**
     * 删除末尾的元素（线程不安全）
     */
-    DNSNode &removeLastNode() {
+    DNSNode removeLastNode() {
         // 业务
-        DNSNode node = caches.back();
+        DNSNode clone = caches.back();
         caches.pop_back();
-        return node;
-    }
-
-    /**
-     * 删除节点（线程不安全）
-     * @param node
-     * @return
-     */
-    bool removeNode(DNSNode &node) {
-        list<DNSNode>::iterator ite;
-        for (ite = caches.begin(); ite != caches.end(); ++ite) {
-            if (ite->getUrl() == node.getUrl()) {
-                caches.erase(ite);
-                return true;
-            }
-        }
-        return false;
+        return clone;
     }
 
     /**
@@ -66,7 +50,7 @@ private:
     /**
      * 打印cache（线程不安全）
      */
-    void printCache(){
+    void printCache() {
         ExecutionUtil::log("------------------------------------打印cache------------------------------------");
         for (DNSNode &node : caches) {
             cout << node.getUrl() << "\t" << node.getIpv4() << "\t" << node.getIpv6() << endl;
@@ -88,6 +72,7 @@ public:
         }
         // insert before
         caches.insert(caches.begin(), node);
+        printCache();
         // 释放写锁
         mutex.unlock();
     }
@@ -100,12 +85,15 @@ public:
     void putToFirst(DNSNode &node) {
         // 加写锁
         mutex.lock();
+        DNSNode clone;
         for (list<DNSNode>::iterator ite = caches.begin(); ite != caches.end(); ite++) {
             if (node.getUrl() == ite->getUrl()) {
-                insertFirstWithoutLock(node);
-                removeNode(ite.operator*());
+                clone = ite.operator*();
+                caches.erase(ite);
+                break;
             }
         }
+        insertFirstWithoutLock(clone);
         printCache();
         // 释放写锁
         mutex.unlock();
@@ -119,13 +107,13 @@ public:
     DNSNode getNodeByUrl(string &url) {
         // 加读锁
         mutex.lock_shared();
-        printCache();
         // 业务
         for (DNSNode &node : caches) {
             if (node.getUrl() == url) {
                 DNSNode clone = node;
                 // 释放读锁
                 mutex.unlock_shared();
+                printCache();
                 return clone;
             }
         }

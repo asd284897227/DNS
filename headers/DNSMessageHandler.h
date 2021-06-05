@@ -213,7 +213,7 @@ public:
                 resPtr += 2;
 
                 for (int i = 0; i < header.qdCount; i++) {
-                    resPtr += (questions->qName.length() + 1 + 5);
+                    resPtr += (questions->qName.length() + 2 + 5);
                 }
             }
             // ÷∏’Î“∆÷¡answer

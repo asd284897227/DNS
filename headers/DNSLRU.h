@@ -62,8 +62,8 @@ private:
         // insert before
         caches.insert(caches.begin(), node);
     }
-public:
 
+public:
 
 
     /**
@@ -108,6 +108,10 @@ public:
     DNSNode getNodeByUrl(string &url) {
         // 加读锁
         mutex.lock_shared();
+        ExecutionUtil::log("------------------------------------打印cache------------------------------------");
+        for (DNSNode &node : caches) {
+            cout << node.getUrl() << "\t" << node.getIpv4() << "\t" << node.getIpv6() << endl;
+        }
         // 业务
         for (DNSNode &node : caches) {
             if (node.getUrl() == url) {

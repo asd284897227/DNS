@@ -6,15 +6,13 @@
 #define DNS_DNSLRU_H
 
 #include "ExecutionUtil.h"
-#include "DNSNode.h"
+#include "DNSCacheNode.h"
 #include "../allLibs/allLibs.h"
 
 class DNSLRU {
-
 private:
-    list<DNSNode> caches;
-    mutable std::shared_mutex mutex;
-    DNSNode emptyNode;
+    list<DNSCacheNode> caches;
+    DNSCacheNode emptyNode;
 
 
     /**
@@ -28,9 +26,9 @@ private:
     /**
     * 删除末尾的元素（线程不安全）
     */
-    DNSNode removeLastNode() {
+    DNSCacheNode removeLastNode() {
         // 业务
-        DNSNode clone = caches.back();
+        DNSCacheNode clone = caches.back();
         caches.pop_back();
         return clone;
     }
@@ -39,7 +37,7 @@ private:
      * 在头部添加元素（线程不安全）
      * @param node
      */
-    void insertFirstWithoutLock(DNSNode &node) {
+    void insertFirstWithoutLock(DNSCacheNode &node) {
         if (getSize() >= MAX_LRU_SIZE) {
             removeLastNode();
         }
@@ -52,41 +50,26 @@ private:
      */
     void printCache() {
         ExecutionUtil::log("------------------------------------打印cache------------------------------------");
-        for (DNSNode &node : caches) {
-            cout << node.getUrl() << "\t" << node.getIpv4() << "\t" << node.getIpv6() << endl;
+        for (DNSCacheNode &node : caches) {
+            cout << node.getUrl() << "\t" << node.getTypeOfNode() << endl;
         }
     }
+
 
 public:
+    mutable std::shared_mutex mutex;
 
 
-    /**
-     * 在头部添加元素
-     * @param node
-     */
-    void insertFirst(DNSNode &node) {
+
+/**
+ * 移到首位
+ * @param node
+ */
+    void putToFirst(DNSCacheNode &node) {
         // 加写锁
         mutex.lock();
-        if (getSize() >= MAX_LRU_SIZE) {
-            removeLastNode();
-        }
-        // insert before
-        caches.insert(caches.begin(), node);
-        printCache();
-        // 释放写锁
-        mutex.unlock();
-    }
-
-
-    /**
-     * 移到首位
-     * @param node
-     */
-    void putToFirst(DNSNode &node) {
-        // 加写锁
-        mutex.lock();
-        DNSNode clone;
-        for (list<DNSNode>::iterator ite = caches.begin(); ite != caches.end(); ite++) {
+        DNSCacheNode clone(node.getUrl());
+        for (list<DNSCacheNode>::iterator ite = caches.begin(); ite != caches.end(); ite++) {
             if (node.getUrl() == ite->getUrl()) {
                 clone = ite.operator*();
                 caches.erase(ite);
@@ -99,18 +82,39 @@ public:
         mutex.unlock();
     }
 
-    /**
-     * 根据url获取DNSNode
-     * @param url
-     * @return
-     */
-    DNSNode getNodeByUrl(string &url) {
+/**
+ *
+ * @param url 根据url获取节点，若不存在url键则创建新节点（线程不安全）
+ * @return
+ */
+    DNSCacheNode &getNodeByUrlAndCreate(string &url) {
+        // 业务
+        for (DNSCacheNode &node : caches) {
+            if (node.getUrl() == url) {
+                return node;
+            }
+        }
+        if (getSize() >= MAX_LRU_SIZE) {
+            removeLastNode();
+        }
+        DNSCacheNode newNode(url);
+        // insert before
+        caches.insert(caches.begin(), newNode);
+        return caches.begin().operator*();
+    }
+
+/**
+ * 根据url获取DNSCacheNode
+ * @param url
+ * @return
+ */
+    DNSCacheNode getNodeByUrl(string &url) {
         // 加读锁
         mutex.lock_shared();
         // 业务
-        for (DNSNode &node : caches) {
+        for (DNSCacheNode &node : caches) {
             if (node.getUrl() == url) {
-                DNSNode clone = node;
+                DNSCacheNode clone = node;
                 // 释放读锁
                 mutex.unlock_shared();
                 printCache();
@@ -121,6 +125,7 @@ public:
         mutex.unlock_shared();
         return emptyNode;
     }
+
 };
 
 #endif //DNS_DNSLRU_H

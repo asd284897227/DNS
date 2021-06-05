@@ -114,15 +114,14 @@ public:
             string ip;
             int ipType = TYPE_IPV4;
             // 查询cache
-            DNSNode nodeInCache = lru.getNodeByUrl(q.qName);
-
+            DNSCacheNode nodeInCache = lru.getNodeByUrl(q.qName);
             if (qType == 0x01 && header.getOpcode() == 0x0) {
                 ipType = TYPE_IPV4;
-                // cache中存在ipv4记录
-                if (!nodeInCache.getIpv4OfCache().empty()) {
-                    ip = nodeInCache.getIpv4OfCache();
+                // 存在cache
+                if (!nodeInCache.isIpv4Empty()) {
+                    ExecutionUtil::log(q.qName + " ipv4" + "存在缓存！");
                     lru.putToFirst(nodeInCache);
-                    addIpResponseToClient(ip, TYPE_IPV4, i == 0);
+                    addCacheNodeMessage(nodeInCache, TYPE_IPV4);
                 }
                     // cache不存在ipv4记录
                 else {
@@ -130,17 +129,11 @@ public:
                     // 对照表存在ipv4记录
                     if (!nodeInMap.getIpv4().empty()) {
                         ip = nodeInMap.getIpv4();
-                        if (!nodeInCache.getIpv6OfCache().empty()) {
-                            nodeInCache.setIpv4(ip);
-                            lru.putToFirst(nodeInCache);
-                        } else {
-                            lru.insertFirst(nodeInMap);
-                        }
                         addIpResponseToClient(ip, TYPE_IPV4, i == 0);
                     }
                         // 对照表不存在ipv4记录，则上抛至外部服务器
                     else {
-                        RelayDNSRequestHandler(reqMsg, reqLen, localDNSServerSocket, clientAddr);
+                        RelayDNSRequestHandler(reqMsg, reqLen, q.qName, ipType, lru, localDNSServerSocket, clientAddr);
                         return;
                     }
                 }
@@ -148,39 +141,48 @@ public:
                 // 查询ipv6
             else if (qType == 0x1c && header.getOpcode() == 0x0) {
                 ipType = TYPE_IPV6;
-                // cache中存在ipv6记录
-                if (!nodeInCache.getIpv6OfCache().empty()) {
-                    ip = nodeInCache.getIpv6OfCache();
+                // 存在cache
+                ExecutionUtil::log(q.qName + " ipv6" + "存在缓存！");
+                if (!nodeInCache.isIpv6Empty()) {
                     lru.putToFirst(nodeInCache);
-                    addIpResponseToClient(ip, TYPE_IPV6, i == 0);
+                    addCacheNodeMessage(nodeInCache, TYPE_IPV6);
                 }
-                    // cache不存在ipv6记录
+                    // cache不存在ipv4记录
                 else {
                     DNSNode nodeInMap = localDnsFileHandler.getNodeByUrl(q.qName);
-                    // 对照表存在ipv6记录
+                    // 对照表存在ipv4记录
                     if (!nodeInMap.getIpv6().empty()) {
                         ip = nodeInMap.getIpv6();
-                        if (!nodeInCache.getIpv4OfCache().empty()) {
-                            nodeInCache.setIpv6(ip);
-                            lru.putToFirst(nodeInCache);
-                        } else {
-                            lru.insertFirst(nodeInMap);
-                        }
                         addIpResponseToClient(ip, TYPE_IPV6, i == 0);
                     }
                         // 对照表不存在ipv4记录，则上抛至外部服务器
                     else {
-                        RelayDNSRequestHandler(reqMsg, reqLen, localDNSServerSocket, clientAddr);
+                        RelayDNSRequestHandler(reqMsg, reqLen, q.qName, ipType, lru, localDNSServerSocket, clientAddr);
                         return;
                     }
                 }
             } else {
-                RelayDNSRequestHandler(reqMsg, reqLen, localDNSServerSocket, clientAddr);
+                RelayDNSRequestHandler(reqMsg, reqLen, q.qName, 0, lru, localDNSServerSocket, clientAddr);
                 return;
             }
         }
         sendto(localDNSServerSocket, resMsg, resPtr - resMsg, 0, (SOCKADDR *) &clientAddr, sizeof(SOCKADDR));
         ExecutionUtil::log("完成处理：" + to_string(*((unsigned short *) reqMsg)));
+    }
+
+    /**
+     * 读取cache响应
+     * @param node
+     * @param type
+     */
+    void addCacheNodeMessage(DNSCacheNode node, int type) {
+        if (type == TYPE_IPV4) {
+            memcpy(resMsg, node.getIpv4(), node.getIpv4Len());
+            resPtr = resMsg + node.getIpv4Len();
+        } else if (type == TYPE_IPV6) {
+            memcpy(resMsg, node.getIpv6(), node.getIpv6Len());
+            resPtr = resMsg + node.getIpv6Len();
+        }
     }
 
     void addIpResponseToClient(string &ip, int ipType, bool first) {

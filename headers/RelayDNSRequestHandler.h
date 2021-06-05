@@ -22,15 +22,23 @@ public:
     char (&msg)[BUFFER_SIZE];
     int length;
 
+    string &url;
+    int type;
+    DNSLRU &lru;
+
     /**
      *
      * @param msg 报文缓冲区首地址
      * @param length 报文长度
      */
     RelayDNSRequestHandler(char (&msg)[BUFFER_SIZE], int length,
+                           string &url, int type,
+                           DNSLRU &lru,
                            SOCKET &localDNSSocket, SOCKADDR_IN &clientAddr)
-            : msg(msg), localDNSSocket(localDNSSocket), clientAddr(clientAddr) {
-        this->length = length;
+            : msg(msg), length(length),
+              url(url), type(type),
+              lru(lru),
+              localDNSSocket(localDNSSocket), clientAddr(clientAddr) {
         createRelaySocket();
         sendMessageToExternDNSServer();
         waitForMessageFromExternDNSServer();
@@ -84,6 +92,16 @@ public:
             ExecutionUtil::log("接收外部服务器出错！\n");
             return;
         } else {
+            if (type == TYPE_IPV4 || type == TYPE_IPV6) {
+                lru.mutex.lock();
+                DNSCacheNode &node = lru.getNodeByUrlAndCreate(url);
+                if (type == TYPE_IPV4) {
+                    node.setIpV4(msg, lenOfExtern);
+                } else if (type == TYPE_IPV6) {
+                    node.setIpV6(msg, lenOfExtern);
+                }
+                lru.mutex.unlock();
+            }
             sendto(localDNSSocket, msg, lenOfExtern, 0, (struct sockaddr *) &clientAddr, sizeof(clientAddr));
             ExecutionUtil::log("【成功中转一次DNS请求！】" + to_string(*((unsigned short *) msg)));
         }

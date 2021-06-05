@@ -63,6 +63,16 @@ private:
         caches.insert(caches.begin(), node);
     }
 
+    /**
+     * 打印cache（线程不安全）
+     */
+    void printCache(){
+        ExecutionUtil::log("------------------------------------打印cache------------------------------------");
+        for (DNSNode &node : caches) {
+            cout << node.getUrl() << "\t" << node.getIpv4() << "\t" << node.getIpv6() << endl;
+        }
+    }
+
 public:
 
 
@@ -96,6 +106,7 @@ public:
                 removeNode(ite.operator*());
             }
         }
+        printCache();
         // 释放写锁
         mutex.unlock();
     }
@@ -108,10 +119,7 @@ public:
     DNSNode getNodeByUrl(string &url) {
         // 加读锁
         mutex.lock_shared();
-        ExecutionUtil::log("------------------------------------打印cache------------------------------------");
-        for (DNSNode &node : caches) {
-            cout << node.getUrl() << "\t" << node.getIpv4() << "\t" << node.getIpv6() << endl;
-        }
+        printCache();
         // 业务
         for (DNSNode &node : caches) {
             if (node.getUrl() == url) {
